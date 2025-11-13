@@ -86,9 +86,8 @@ Return ONLY valid JSON with:
     let aiParsed = null;
 
     try {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash-latest",
-      });
+     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
 
       const result = await model.generateContent(prompt);
       aiRaw = result.response.text().trim();
