@@ -40,10 +40,7 @@ async function extractTextFromFile(file) {
 
     return buffer.toString("utf8");
   } finally {
-    // Cleanup temp file
-    try {
-      fs.unlinkSync(file.path);
-    } catch {}
+    try { fs.unlinkSync(file.path); } catch {}
   }
 }
 
@@ -60,7 +57,7 @@ app.post("/api/analyze", upload.single("resume"), async (req, res) => {
     }
 
     const resumeTextFull = await extractTextFromFile(req.file);
-    const resumeText = resumeTextFull.slice(0, 4500); // Prevent overflow
+    const resumeText = resumeTextFull.slice(0, 4500);
 
     const prompt = `
 You are an expert ATS evaluator. Compare the following RESUME and JOB DESCRIPTION.
@@ -86,23 +83,32 @@ Return ONLY valid JSON with:
     let aiParsed = null;
 
     try {
-     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash"
+      });
 
+      // ✅ FIXED GEMINI CALL
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ]
+      });
 
-      const result = await model.generateContent(prompt);
       aiRaw = result.response.text().trim();
 
-      // Try direct parsing
+      // Try direct JSON parse
       try {
         aiParsed = JSON.parse(aiRaw);
       } catch {
-        // Fallback: extract the JSON part only
         const first = aiRaw.indexOf("{");
         const last = aiRaw.lastIndexOf("}");
         if (first !== -1 && last !== -1) {
-          const jsonPart = aiRaw.substring(first, last + 1);
+          const maybe = aiRaw.substring(first, last + 1);
           try {
-            aiParsed = JSON.parse(jsonPart);
+            aiParsed = JSON.parse(maybe);
           } catch {}
         }
       }
