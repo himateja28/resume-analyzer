@@ -84,7 +84,7 @@ Return ONLY valid JSON with:
 
     try {
       const model = genAI.getGenerativeModel({
-        model: "gemini-pro"
+        model: "gemini-1.5-flash"
       });
 
       // ✅ FIXED GEMINI CALL
